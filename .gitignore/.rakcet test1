@@ -1,0 +1,48 @@
+#lang racket
+
+(define fact
+  (λ (n)
+    (if (zero? n)
+        1
+        (* n (fact (sub1 n))))))
+
+(define fact/acc
+  (λ (n acc)
+    (if (zero? n)
+        acc
+        (fact/acc (sub1 n) (* n acc)))))
+
+#;
+(fact 5)
+#;
+(fact/acc 5 1)
+
+#;
+(match '(λ (w) w)
+  [`(λ (,x) ,b)
+   `(x is ,x b is ,b)])
+
+(define valof
+  (λ (exp env)
+    (match exp
+      [`,n #:when (number? n) n]
+      [`,y #:when (symbol? y) (env y)]
+      [`(roman-list ,ls) (apply + (map env ls))]
+      [`(lambda (,x) ,body)
+       (λ (arg)
+         (valof body (λ (y) (if (eqv? y x) arg (env y)))))]
+      [`(,rator ,rand)
+       ((valof rator env) (valof rand env))])))
+
+(define init-env
+  (λ (y) (error "badness:( unbound ~s" y)))
+
+(define init-env-with-something
+  (λ (y) (if (eqv? 'add1 y) add1 (init-env y))))
+
+(define roman-env
+  (λ (y) (if (eqv? 'I y) 1 (if (eqv? 'V y) 5 (if (eqv? 'X y) 10 (if (eqv? 'L y) 50 (if (eqv? 'C y) 100 (if (eqv? 'D y) 500 (if (eqv? 'M y) 1000 (init-env-with-something y))))))))))
+
+(valof '(roman-list (I V X C D)) roman-env)
+#;
+(valof '((lambda (x) x) (lambda (y) y)) init-env)
